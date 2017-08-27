@@ -1,16 +1,28 @@
 # -*- coding: utf-8 -*-
 
 """Console script for stathakis."""
+import logging
 
 import click
 
+from .app import make_app
+
 
 @click.command()
-def main(args=None):
+@click.option(
+    '--debug/--no-debug',
+    default=False,
+    help='Start application in debugger mode.'
+)
+def main(debug, args=None):
     """Console script for stathakis."""
-    click.echo("Replace this message by putting your code into "
-               "stathakis.cli.main")
-    click.echo("See click documentation at http://click.pocoo.org/")
+    # configure logging
+    level = logging.INFO
+    if debug:
+        level = logging.DEBUG
+    logging.basicConfig(level=level)
+    app = make_app()
+    app.run(debug=debug, port=8080)
 
 
 if __name__ == "__main__":

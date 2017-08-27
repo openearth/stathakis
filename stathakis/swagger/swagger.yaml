@@ -11,8 +11,8 @@ info:
   license:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-host: "virtserver.swaggerhub.com"
-basePath: "/SiggyF/realtime/1.0.0"
+host: "localhost:8080"
+basePath: "/stathakis/1.0.0"
 tags:
 - name: "admins"
   description: "Secured Admin-only calls"
@@ -168,7 +168,7 @@ paths:
       - name: "id"
         in: "path"
         required: true
-        type: "integer"
+        type: "string"
       - name: "quantity"
         in: "path"
         description: "type of variables returned"
