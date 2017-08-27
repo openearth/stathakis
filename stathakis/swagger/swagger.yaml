@@ -1,0 +1,215 @@
+---
+swagger: "2.0"
+info:
+  description: "This API allows you to retrieve realtime and historic measurements.\
+    \ It is a frontend for measurements from other sources. It is intended for stations\
+    \ or gridded timeseries."
+  version: "1.0.0"
+  title: "Measurements API"
+  contact:
+    email: "fedor.baart@deltares.nl"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "virtserver.swaggerhub.com"
+basePath: "/SiggyF/realtime/1.0.0"
+tags:
+- name: "admins"
+  description: "Secured Admin-only calls"
+- name: "developers"
+  description: "Operations available to regular developers"
+schemes:
+- "https"
+paths:
+  /stations:
+    get:
+      tags:
+      - "developers"
+      summary: "a list of all stations"
+      description: "Show a list of all stations\n"
+      operationId: "stathakis.controllers.stations"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "all stations"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Station"
+        400:
+          description: "bad input parameter"
+      x-tags:
+      - tag: "developers"
+  /grids:
+    get:
+      tags:
+      - "developers"
+      summary: "a list of all grids"
+      description: "Show a list of all grids for which measurements are available\n"
+      operationId: "stathakis.controllers.grids"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "all grids"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Grid"
+        400:
+          description: "bad input parameter"
+      x-tags:
+      - tag: "developers"
+  /stations/{id}/info:
+    get:
+      tags:
+      - "developers"
+      summary: "information about a station"
+      description: "Show information about a station\n"
+      operationId: "stathakis.controllers.station_info"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+      responses:
+        200:
+          description: "Metadata"
+          schema:
+            type: "object"
+            properties: {}
+        400:
+          description: "bad input parameter"
+      x-tags:
+      - tag: "developers"
+  /grids/{id}/info:
+    get:
+      tags:
+      - "developers"
+      summary: "information about a grid"
+      description: "Show information about a grid\n"
+      operationId: "stathakis.controllers.grid_info"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+      responses:
+        200:
+          description: "Metadata"
+          schema:
+            type: "object"
+            properties: {}
+        400:
+          description: "bad input parameter"
+      x-tags:
+      - tag: "developers"
+  /stations/{id}/measurements/{quantity}:
+    get:
+      tags:
+      - "developers"
+      summary: "a selection of measurements"
+      description: "Return measurements in the selected period for the given quantity\n"
+      operationId: "stathakis.controllers.station_measurements"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+      - name: "quantity"
+        in: "path"
+        description: "type of variables returned"
+        required: true
+        type: "string"
+        enum:
+        - "wind"
+        - "water"
+      - name: "startDate"
+        in: "query"
+        required: true
+        type: "string"
+        format: "date-time"
+      - name: "endDate"
+        in: "query"
+        required: true
+        type: "string"
+        format: "date-time"
+      responses:
+        200:
+          description: "Records"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Record"
+        400:
+          description: "bad input parameter"
+      x-tags:
+      - tag: "developers"
+  /grids/{id}/measurements/{quantity}:
+    get:
+      tags:
+      - "developers"
+      summary: "a selection of measurements"
+      description: "Return measurements in the selected period for the given quantity\
+        \ at a grid location\n"
+      operationId: "stathakis.controllers.grid_measurements"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+      - name: "quantity"
+        in: "path"
+        description: "type of variables returned"
+        required: true
+        type: "string"
+        enum:
+        - "wind"
+        - "water"
+      - name: "lat"
+        in: "query"
+        required: true
+        type: "number"
+      - name: "lon"
+        in: "query"
+        required: true
+        type: "number"
+      - name: "startDate"
+        in: "query"
+        required: true
+        type: "string"
+        format: "date-time"
+      - name: "endDate"
+        in: "query"
+        required: true
+        type: "string"
+        format: "date-time"
+      responses:
+        200:
+          description: "Records"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Record"
+        400:
+          description: "bad input parameter"
+      x-tags:
+      - tag: "developers"
+definitions:
+  Station:
+    type: "object"
+  Record:
+    type: "object"
+  Grid:
+    type: "object"
