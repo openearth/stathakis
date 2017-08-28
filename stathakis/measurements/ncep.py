@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import flask
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,6 +29,18 @@ def check(u_urls, v_urls):
     # assert assumed units
     assert ds_u.variables['time'].units == 'hours since 1800-01-01 00:00:0.0'
     assert ds_v.variables['time'].units == 'hours since 1800-01-01 00:00:0.0'
+
+
+def get_grid_info(data_dir):
+    info = {}
+    data_dir = pathlib.Path(data_dir)
+    v_urls = list(sorted(data_dir.glob('vwnd.10m.gauss.*.nc')))
+    u_urls = list(sorted(data_dir.glob('uwnd.10m.gauss.*.nc')))
+    with netCDF4.MFDataset(u_urls, aggdim='time') as ds_u:
+        info.update(ds_u.ncattrs)
+    with netCDF4.MFDataset(v_urls, aggdim='time') as ds_v:
+        info.update(ds_v.ncattrs)
+    return info
 
 
 def get_measurements(data_dir, quantity, lat, lon, start_time, end_time):
