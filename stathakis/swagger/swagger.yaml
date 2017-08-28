@@ -133,12 +133,12 @@ paths:
         enum:
         - "wind"
         - "water"
-      - name: "startDate"
+      - name: "start_time"
         in: "query"
         required: true
         type: "string"
         format: "date-time"
-      - name: "endDate"
+      - name: "end_time"
         in: "query"
         required: true
         type: "string"
@@ -185,12 +185,12 @@ paths:
         in: "query"
         required: true
         type: "number"
-      - name: "startDate"
+      - name: "start_time"
         in: "query"
         required: true
         type: "string"
         format: "date-time"
-      - name: "endDate"
+      - name: "end_time"
         in: "query"
         required: true
         type: "string"

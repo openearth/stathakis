@@ -26,18 +26,21 @@ def grid_measurements(id, quantity, lat, lon, start_time, end_time) -> list:
     lat = float(lat)
     lon = float(lon)
     fun = available_grids[id]
+    # get the data directory from the configuration
+    data_dir = flask.current_app.config["%s_DATA_DIR" % (id.upper(), )]
     records = fun(
-        quantity,
+        quantity=quantity,
         lat=lat,
         lon=lon,
         start_time=start_time,
-        end_time=end_time
+        end_time=end_time,
+        data_dir=data_dir
     )
     return records
 
 
-def grids() -> str:
-    return 'do some magic!'
+def grids() -> list:
+    return list(available_grids.keys())
 
 
 def station_info(id) -> str:

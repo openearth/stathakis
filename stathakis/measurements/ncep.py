@@ -4,20 +4,9 @@ import pathlib
 import netCDF4
 import numpy as np
 import pandas as pd
-
-import dateutil.parser
-# find closest points
+import flask
 
 logger = logging.getLogger(__name__)
-
-
-
-
-# TODO: configure
-data_dir = pathlib.Path('/mnt/efs/data/noaa/ncep')
-
-v_urls = list(sorted(data_dir.glob('vwnd.10m.gauss.*.nc')))
-u_urls = list(sorted(data_dir.glob('uwnd.10m.gauss.*.nc')))
 
 
 def check(u_urls, v_urls):
@@ -41,39 +30,48 @@ def check(u_urls, v_urls):
     assert ds_v.variables['time'].units == 'hours since 1800-01-01 00:00:0.0'
 
 
-# get all data required to find correct dataset
-data = {}
-with netCDF4.MFDataset(u_urls, aggdim='time') as ds_u:
-    # lookup variables in both files
-    t_u = ds_u.variables['time'][:]
-    lon_u = ds_u.variables['lon'][:]
-    lat_u = ds_u.variables['lat'][:]
+def get_measurements(data_dir, quantity, lat, lon, start_time, end_time):
+    """return data for a given location"""
 
+    data_dir = pathlib.Path(data_dir)
+    v_urls = list(sorted(data_dir.glob('vwnd.10m.gauss.*.nc')))
+    u_urls = list(sorted(data_dir.glob('uwnd.10m.gauss.*.nc')))
 
-# don't use num2date from netcdf4, too slow
-t0 = np.datetime64('1800-01-01', 'm')
-# use variables from u
-data['t'] = t0 + t_u.astype('timedelta64[h]')
-data['lon'] = lon_u
-data['lat'] = lat_u
-lat_idx = np.argmin(np.abs(data['lat'] - lat))
-lon_idx = np.argmin(np.abs(data['lon'] - lon))
-data['lat'][lat_idx], data['lon'][lon_idx], (lat_idx, lon_idx)
-t_range = np.asarray([start_time, end_time], 'datetime64[m]')
-t_start_idx, t_end_idx = np.searchsorted(data['t'], t_range)
-t_start_idx, t_end_idx
+    # get all data required to find correct dataset
+    data = {}
+    with netCDF4.MFDataset(u_urls, aggdim='time') as ds_u:
+        # lookup variables in both files
+        t_u = ds_u.variables['time'][:]
+        lon_u = ds_u.variables['lon'][:]
+        lat_u = ds_u.variables['lat'][:]
 
-with netCDF4.MFDataset(u_urls, aggdim='time') as ds_u:
-    data['u'] = ds_u.variables['uwnd'][t_start_idx:t_end_idx, lat_idx, lon_idx]
-with netCDF4.MFDataset(v_urls, aggdim='time') as ds_v:
-    data['v'] = ds_v.variables['vwnd'][t_start_idx:t_end_idx, lat_idx, lon_idx]
+    # don't use num2date from netcdf4, too slow
+    t0 = np.datetime64('1800-01-01', 'm')
 
+    # use variables from u
+    data['t'] = t0 + t_u.astype('timedelta64[h]')
+    data['lon'] = lon_u
+    data['lat'] = lat_u
+    lat_idx = np.argmin(np.abs(data['lat'] - lat))
+    lon_idx = np.argmin(np.abs(data['lon'] - lon))
+    data['lat'][lat_idx], data['lon'][lon_idx], (lat_idx, lon_idx)
+    t_range = np.asarray([start_time, end_time], 'datetime64[m]')
+    t_start_idx, t_end_idx = np.searchsorted(data['t'], t_range)
+    t_start_idx, t_end_idx
 
-df = pd.DataFrame(data=dict(
-    t=data['t'][t_start_idx:t_end_idx],
-    u=data['u'],
-    v=data['v']
-))
+    # slice
+    s = np.s_[t_start_idx:t_end_idx, lat_idx, lon_idx]
 
+    with netCDF4.MFDataset(u_urls, aggdim='time') as ds_u:
+        data['u'] = ds_u.variables['uwnd'][s]
+    with netCDF4.MFDataset(v_urls, aggdim='time') as ds_v:
+        data['v'] = ds_v.variables['vwnd'][s]
 
-response = df.to_json(orient='records')
+    df = pd.DataFrame(data=dict(
+        t=data['t'][t_start_idx:t_end_idx],
+        u=data['u'],
+        v=data['v']
+    ))
+
+    response = df.to_dict(orient='records')
+    return response
