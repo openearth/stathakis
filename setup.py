@@ -40,6 +40,9 @@ setup(
             'stathakis=stathakis.cli:main'
         ]
     },
+    scripts=[
+        'scripts/mount_efs'
+    ],
     include_package_data=True,
     install_requires=requirements,
     license="GNU General Public License v3",
