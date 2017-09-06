@@ -13,7 +13,7 @@ RUN conda create -y -n py35 python=3.5  jpeg=8d libgdal netcdf4 pandas gdal shap
 COPY ./ app/
 ENV PATH /opt/conda/envs/py35/bin:$PATH
 ENV GDAL_DATA /opt/conda/envs/py35/share/gdal
-ENV MPLBACKEND Agg
+RUN find /opt/conda/envs/py35
 RUN cd /app && pip install -r requirements.txt && pip install -e .
 # Create a run directory with
 WORKDIR app
