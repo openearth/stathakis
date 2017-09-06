@@ -1,5 +1,6 @@
 import json
 import geojson
+import simplejson
 
 
 def df2geojson(df):
@@ -14,7 +15,7 @@ def df2geojson(df):
     return fc
 
 
-class CustomEncoder(json.JSONEncoder):
+class CustomEncoder(simplejson.JSONEncoder):
     """Support for data types that JSON default encoder
     does not do.
 
@@ -74,4 +75,4 @@ class CustomEncoder(json.JSONEncoder):
                 return obj.isoformat()
         if HAVE_GEOJSON:
             return geojson.GeoJSONEncoder.default(self, obj)
-        return json.JSONEncoder.default(self, obj)
+        return simplejson.JSONEncoder.default(self, obj)

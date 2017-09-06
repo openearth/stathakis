@@ -4,15 +4,14 @@ import dateutil
 import flask
 
 from .measurements import available_grids
+from .measurements import available_stations
+
 
 logger = logging.getLogger(__name__)
 
 
-def stations() -> list:
-    logger.info("request: %s", flask.request)
-    return [{
-        "id": 1
-    }]
+def grids() -> list:
+    return list(available_grids.keys())
 
 
 def grid_info(id) -> list:
@@ -39,12 +38,18 @@ def grid_measurements(id, quantity, lat, lon, start_time, end_time) -> list:
     return records
 
 
-def grids() -> list:
-    return list(available_grids.keys())
+def stations() -> list:
+    """return a list of all stations"""
+    stations = []
+
+    # concatenate a list of all stations
+    for key, fun in available_stations.items():
+        stations.extend(fun())
+    return stations
 
 
-def station_info(id) -> str:
-    return 'do some magic!'
+def station_info(id) -> object:
+    return {}
 
 
 def station_measurements(id, quantity, startDate, endDate) -> str:

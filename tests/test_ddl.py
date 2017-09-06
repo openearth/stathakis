@@ -14,3 +14,8 @@ def test_get_data():
     end_time = "2017-3-14T10:10:00.000+01:00"
     ddl_data = ddl.get_data(station, start_time, end_time)
     assert len(ddl_data) == 2, "we should have 2 series"
+
+
+def test_stations():
+    ddl_data = ddl.get_stations()
+    assert len(ddl_data['features']) >= 10, "we should have at least 10 records"

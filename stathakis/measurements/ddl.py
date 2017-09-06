@@ -232,17 +232,18 @@ def get_data(station, start_time, end_time):
 
 
 @cache.region('short_term', 'rws')
-def get_metadata_response():
+def get_stations():
     metadata = get_metadata()
     metadata_df = metadata2df(metadata)
     fc = df2geojson(metadata_df)
+
     # serializa/deserialize to get rid of custom types
     response = json.loads(geojson.dumps(fc, cls=CustomEncoder))
     return response
 
 
 @cache.region('short_term', 'rws')
-def get_matadata_resposne(station, start_time=None, end_time=None):
+def get_measurements(station, start_time=None, end_time=None):
     now = datetime.datetime.now()
     two_days = datetime.timedelta(days=2)
     if start_time is None:

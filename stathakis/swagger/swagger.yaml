@@ -30,7 +30,8 @@ paths:
       operationId: "stathakis.controllers.stations"
       produces:
       - "application/json"
-      parameters: []
+      parameters: [
+      ]
       responses:
         200:
           description: "all stations"
