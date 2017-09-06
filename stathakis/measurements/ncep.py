@@ -4,7 +4,6 @@ import pathlib
 import netCDF4
 import numpy as np
 import pandas as pd
-import flask
 
 
 logger = logging.getLogger(__name__)
@@ -23,10 +22,10 @@ def check(u_urls, v_urls):
         t_v = ds_v.variables['time'][:]
         lon_v = ds_v.variables['lon'][:]
         lat_v = ds_v.variables['lat'][:]
-    assert (t_u == t_v).all()
-    assert (lat_u == lat_v).all()
-    assert (lon_u == lon_v).all()
-    # assert assumed units
+        assert (t_u == t_v).all()
+        assert (lat_u == lat_v).all()
+        assert (lon_u == lon_v).all()
+        # assert assumed units
     assert ds_u.variables['time'].units == 'hours since 1800-01-01 00:00:0.0'
     assert ds_v.variables['time'].units == 'hours since 1800-01-01 00:00:0.0'
 
@@ -37,9 +36,13 @@ def get_grid_info(data_dir):
     v_urls = list(sorted(data_dir.glob('vwnd.10m.gauss.*.nc')))
     u_urls = list(sorted(data_dir.glob('uwnd.10m.gauss.*.nc')))
     with netCDF4.MFDataset(u_urls, aggdim='time') as ds_u:
-        info.update(ds_u.ncattrs)
+        attrs = ds_u.ncattrs()
+        for attr in attrs:
+            info[attr] = getattr(ds_u, attr)
     with netCDF4.MFDataset(v_urls, aggdim='time') as ds_v:
-        info.update(ds_v.ncattrs)
+        attrs = ds_v.ncattrs()
+        for attr in attrs:
+            info[attr] = getattr(ds_v, attr)
     return info
 
 
@@ -75,16 +78,37 @@ def get_measurements(data_dir, quantity, lat, lon, start_time, end_time):
     # slice
     s = np.s_[t_start_idx:t_end_idx, lat_idx, lon_idx]
 
+    names = {}
+    units = {}
     with netCDF4.MFDataset(u_urls, aggdim='time') as ds_u:
         data['u'] = ds_u.variables['uwnd'][s]
+        names['u'] = ds_u.variables['uwnd'].long_name
+        units['u'] = ds_u.variables['uwnd'].units
     with netCDF4.MFDataset(v_urls, aggdim='time') as ds_v:
         data['v'] = ds_v.variables['vwnd'][s]
+        names['v'] = ds_u.variables['uwnd'].long_name
+        units['v'] = ds_u.variables['uwnd'].units
 
-    df = pd.DataFrame(data=dict(
-        t=data['t'][t_start_idx:t_end_idx],
-        u=data['u'],
-        v=data['v']
-    ))
+    series = [
+        {
+            "data": pd.DataFrame(data=dict(
+                dateTime=data['t'][t_start_idx:t_end_idx],
+                value=data['u']
+            )),
+            "name": names['u'],
+            "units": units['u']
+        },
+        {
+            "data": pd.DataFrame(data=dict(
+                dateTime=data['t'][t_start_idx:t_end_idx],
+                value=data['v']
+            )),
+            "name": names['v'],
+            "units": units['v']
+        }
 
-    response = df.to_dict(orient='records')
+    ]
+    response = {
+        "series": series
+    }
     return response

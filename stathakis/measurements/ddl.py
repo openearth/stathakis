@@ -14,6 +14,8 @@ import beaker.cache
 
 from ..utils import CustomEncoder, df2geojson
 
+logger = logging.getLogger(__name__)
+
 # set cache settings
 beaker.cache.cache_regions.update({
     'short_term': {
@@ -31,7 +33,7 @@ cache = beaker.cache.CacheManager()
 
 WGS84 = osgeo.osr.SpatialReference()
 WGS84.ImportFromEPSG(4326)
-
+UTC = dateutil.tz.tzutc()
 
 # mapping from Aquo to cf (based on broken csv file)
 # TODO: get from source
@@ -75,8 +77,8 @@ AQUO2CF = {
 }
 
 FILTERS = {
-    "WATERLEVEL": ['WATHTBRKD', 'WATHTE'],
-    "WIND": ['WINDRTG', 'WINDSHD']
+    "waterlevel": ['WATHTBRKD', 'WATHTE'],
+    "wind": ['WINDRTG', 'WINDSHD']
 }
 
 
@@ -104,7 +106,7 @@ def get_metadata():
 
 # this function is slow because every record can have a different coordinate system
 @cache.region('short_term', 'rws')
-def metadata2df(metadata, quantity_filter='WATERLEVEL'):
+def metadata2df(metadata, quantity=None):
     """parse ddl data and return a data frame"""
     locaties_df = pd.DataFrame.from_dict(metadata['LocatieLijst'])
     metadata_locaties_df = pd.DataFrame.from_dict(metadata['AquoMetadataLocatieLijst'])
@@ -144,9 +146,13 @@ def metadata2df(metadata, quantity_filter='WATERLEVEL'):
     merged_df['quantity'] = merged_df.grootheid.apply(lambda x: x['Code'])
 
     merged_df['standard_name'] = merged_df.grootheid.apply(lambda x: AQUO2CF.get(x['Code'], ''))
-    # only show stations of relevant quantity
-    idx = np.in1d(merged_df.quantity, FILTERS['WATERLEVEL'])
-    filtered_df = merged_df[idx]
+
+    if quantity:
+        # only show stations of relevant quantity
+        idx = np.in1d(merged_df.quantity, FILTERS[quantity])
+        filtered_df = merged_df[idx]
+    else:
+        filtered_df = merged_df
     # TODO:
     # convert to standard names using
     # translation_df = pd.read_csv('../data/deltares/wns_en.csv', sep=';', keep_default_na=False)
@@ -174,10 +180,11 @@ def get_series(row, start_time, end_time, validated=False):
             "Code": station.code
         },
         "Periode": {
-            "Begindatumtijd": start_time,
-            "Einddatumtijd": end_time
+            "Begindatumtijd": start_time.isoformat(),
+            "Einddatumtijd": end_time.isoformat()
         }
     }
+    logger.debug('Getting url with data %s', request)
     resp = requests.post(metadata_url, json=request)
     data = resp.json()
     if not data['Succesvol']:
@@ -199,27 +206,30 @@ def get_series(row, start_time, end_time, validated=False):
     timeseries = []
     for measurement in measurements:
         record = {}
-        record['v'] = measurement['Meetwaarde']['Waarde_Numeriek']
-        UTC = dateutil.tz.tzutc()
+        record['value'] = measurement['Meetwaarde']['Waarde_Numeriek']
+
         # parse time
         date = dateutil.parser.parse(measurement['Tijdstip'])
         # convert to UTC
-        record['t'] = date.astimezone(UTC)
+        record['dateTime'] = date.astimezone(UTC)
         timeseries.append(record)
     timeseries_df = pd.DataFrame(timeseries)
     series = timeseries_df
     return {
-        "timeseries": series,
+        "name": metadata['standard_name'].replace('_', ' '),
+        "units": metadata['Eenheid']['Code'],
+        "description": metadata['Parameter_Wat_Omschrijving'],
+        "data": series,
         "metadata": metadata
     }
 
 
-def get_data(station, start_time, end_time):
+def get_data(station, quantity, start_time, end_time):
     """get data for station"""
     metadata = get_metadata()
-    metadata_df = metadata2df(metadata)
+    metadata_df = metadata2df(metadata, quantity=quantity)
 
-    datasets = []
+    series_list = []
     available_series = metadata_df[metadata_df.code == station]
     for idx, row in available_series.iterrows():
         try:
@@ -227,29 +237,42 @@ def get_data(station, start_time, end_time):
         except NoDataException as e:
             logging.exception('no data for %s at %s', row.quantity, row.code)
             continue
-        datasets.append(series)
-    return datasets
+        series_list.append(series)
+    return {
+        "series": series_list
+    }
 
 
 @cache.region('short_term', 'rws')
-def get_stations():
+def get_stations_per_quantity(quantity):
     metadata = get_metadata()
-    metadata_df = metadata2df(metadata)
+    metadata_df = metadata2df(metadata, quantity=quantity)
     fc = df2geojson(metadata_df)
 
+    # serializa/deserialize to get rid of custom types
+    response = geojson.loads(geojson.dumps(fc, cls=CustomEncoder))
+    return response
+
+
+@cache.region('short_term', 'rws')
+def get_station_info(station):
+    metadata = get_metadata()
+    metadata_df = metadata2df(metadata)
+    selected_df = metadata_df[metadata_df.code == str(station)]
+    fc = df2geojson(selected_df)
     # serializa/deserialize to get rid of custom types
     response = json.loads(geojson.dumps(fc, cls=CustomEncoder))
     return response
 
 
 @cache.region('short_term', 'rws')
-def get_measurements(station, start_time=None, end_time=None):
-    now = datetime.datetime.now()
+def get_station_measurements(station, quantity, start_time=None, end_time=None):
+    now = datetime.datetime.now(UTC)
     two_days = datetime.timedelta(days=2)
     if start_time is None:
         start_time = (now - two_days).isoformat()
     if end_time is None:
         end_time = (now + two_days).isoformat()
-    data = get_data()
-    response = json.loads(geojson.dumps(data, cls=CustomEncoder))
+    data = get_data(station, quantity=quantity, start_time=start_time, end_time=end_time)
+    response = json.loads(json.dumps(data, cls=CustomEncoder))
     return response

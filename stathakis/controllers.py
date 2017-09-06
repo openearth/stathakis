@@ -3,15 +3,24 @@ import logging
 import dateutil
 import flask
 
-from .measurements import available_grids
-from .measurements import available_stations
+from .measurements import (
+    available_grids,
+    available_grid_measurements
+)
+
+from .measurements import (
+    available_stations,
+    available_stations_per_quantity,
+    available_station_infos,
+    available_station_measurements
+)
 
 
 logger = logging.getLogger(__name__)
 
 
 def grids() -> list:
-    return list(available_grids.keys())
+    return available_grids
 
 
 def grid_info(id) -> list:
@@ -24,7 +33,7 @@ def grid_measurements(id, quantity, lat, lon, start_time, end_time) -> list:
     end_time = dateutil.parser.parse(end_time)
     lat = float(lat)
     lon = float(lon)
-    fun = available_grids[id]
+    fun = available_grid_measurements[id]
     # get the data directory from the configuration
     data_dir = flask.current_app.config["%s_DATA_DIR" % (id.upper(), )]
     records = fun(
@@ -39,18 +48,29 @@ def grid_measurements(id, quantity, lat, lon, start_time, end_time) -> list:
 
 
 def stations() -> list:
+    return available_stations
+
+
+def stations_per_quantity(dataset, quantity) -> list:
     """return a list of all stations"""
-    stations = []
-
     # concatenate a list of all stations
-    for key, fun in available_stations.items():
-        stations.extend(fun())
-    return stations
+    fun = available_stations_per_quantity[dataset]
+    feature_collection = fun(quantity)
+    features = feature_collection.features
+    for feature in features:
+        feature.properties['dataset'] = dataset
+    return feature_collection
 
 
-def station_info(id) -> object:
-    return {}
+def station_info(dataset, id) -> object:
+    fun = available_station_infos[dataset]
+    station_info = fun(id)
+    return station_info
 
 
-def station_measurements(id, quantity, startDate, endDate) -> str:
-    return 'do some magic!'
+# api conforms to swagger capitalization
+def station_measurements(dataset, id, quantity, start_time=None, end_time=None) -> str:
+    """return measurements for a quantity"""
+    fun = available_station_measurements[dataset]
+    station_data = fun(id, quantity, start_time=start_time, end_time=end_time)
+    return station_data

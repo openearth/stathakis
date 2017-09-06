@@ -25,13 +25,44 @@ paths:
     get:
       tags:
       - "developers"
-      summary: "a list of all stations"
-      description: "Show a list of all stations\n"
+      summary: "a list of all stations datasets"
+      description: "Show a list of all stations datasets\n"
       operationId: "stathakis.controllers.stations"
       produces:
       - "application/json"
-      parameters: [
-      ]
+      parameters: []
+      responses:
+        200:
+          description: "list of station datasets"
+          schema:
+            type: "array"
+        400:
+          description: "bad input parameter"
+      x-tags:
+      - tag: "developers"
+  /stations/{dataset}/{quantity}:
+    get:
+      tags:
+      - "developers"
+      summary: "a list of all stations"
+      description: "Show a list of all stations\n"
+      operationId: "stathakis.controllers.stations_per_quantity"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "dataset"
+        in: "path"
+        required: true
+        type: "string"
+      - name: "quantity"
+        in: "path"
+        description: "type of variables returned"
+        required: true
+        type: "string"
+        enum:
+        - "wind"
+        - "waterlevel"
+
       responses:
         200:
           description: "all stations"
@@ -64,7 +95,7 @@ paths:
           description: "bad input parameter"
       x-tags:
       - tag: "developers"
-  /stations/{id}/info:
+  /stations/{dataset}/{id}/info:
     get:
       tags:
       - "developers"
@@ -74,10 +105,14 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - name: "dataset"
+        in: "path"
+        required: true
+        type: "string"
       - name: "id"
         in: "path"
         required: true
-        type: "integer"
+        type: "string"
       responses:
         200:
           description: "Metadata"
@@ -112,7 +147,7 @@ paths:
           description: "bad input parameter"
       x-tags:
       - tag: "developers"
-  /stations/{id}/measurements/{quantity}:
+  /stations/{dataset}/{id}/measurements/{quantity}:
     get:
       tags:
       - "developers"
@@ -122,10 +157,14 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - name: "dataset"
+        in: "path"
+        required: true
+        type: "string"
       - name: "id"
         in: "path"
         required: true
-        type: "integer"
+        type: "string"
       - name: "quantity"
         in: "path"
         description: "type of variables returned"
@@ -133,24 +172,24 @@ paths:
         type: "string"
         enum:
         - "wind"
-        - "water"
+        - "waterlevel"
       - name: "start_time"
         in: "query"
-        required: true
+        required: false
         type: "string"
         format: "date-time"
       - name: "end_time"
         in: "query"
-        required: true
+        required: false
         type: "string"
         format: "date-time"
       responses:
         200:
           description: "Records"
           schema:
-            type: "array"
+            type: "object"
             items:
-              $ref: "#/definitions/Record"
+              $ref: "#/definitions/Measurements"
         400:
           description: "bad input parameter"
       x-tags:
@@ -177,7 +216,7 @@ paths:
         type: "string"
         enum:
         - "wind"
-        - "water"
+        - "waterlevel"
       - name: "lat"
         in: "query"
         required: true
@@ -202,7 +241,7 @@ paths:
           schema:
             type: "array"
             items:
-              $ref: "#/definitions/Record"
+              $ref: "#/definitions/Measurements"
         400:
           description: "bad input parameter"
       x-tags:
@@ -210,7 +249,11 @@ paths:
 definitions:
   Station:
     type: "object"
-  Record:
+  Measurements:
     type: "object"
+    properties:
+      series:
+        type: array
+
   Grid:
     type: "object"
