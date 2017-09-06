@@ -1,3 +1,5 @@
+import dateutil.parser
+
 from stathakis.measurements import ddl
 
 
@@ -10,12 +12,14 @@ def test_metadata():
 
 def test_get_data():
     station = 'HOEKVHLD'
-    start_time = "2017-3-10T09:00:00.000+01:00"
-    end_time = "2017-3-14T10:10:00.000+01:00"
-    ddl_data = ddl.get_data(station, start_time, end_time)
-    assert len(ddl_data) == 2, "we should have 2 series"
+    start_time = dateutil.parser.parse("2017-3-10T09:00:00.000+01:00")
+    end_time = dateutil.parser.parse("2017-3-14T10:10:00.000+01:00")
+    quantity = 'waterlevel'
+    ddl_data = ddl.get_data(station, quantity, start_time, end_time)
+    assert set(ddl_data.keys()) == {'series'}, "we should have a series"
 
 
 def test_stations():
-    ddl_data = ddl.get_stations()
+    quantity = 'waterlevel'
+    ddl_data = ddl.get_stations_per_quantity(quantity)
     assert len(ddl_data['features']) >= 10, "we should have at least 10 records"
