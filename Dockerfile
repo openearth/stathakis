@@ -15,7 +15,6 @@ ENV PATH /opt/conda/envs/py35/bin:$PATH
 ENV MPLBACKEND Agg
 RUN cd /app && pip install -r requirements.txt && pip install -e .
 # Create a run directory with
-RUN cd app && mount_efs data
 WORKDIR app
 EXPOSE 8080
 # not sure what this is
