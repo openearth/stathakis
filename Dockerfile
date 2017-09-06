@@ -9,7 +9,7 @@ RUN \
     apt-get update --fix-missing && \
     apt-get install -y wget unzip build-essential
 # switch to python 3.5 (no gdal in 3.6)
-RUN conda create -y -n py35 python=3.5 netcdf4 pandas gdal shapely
+RUN conda create -y -n py35 python=3.5  jpeg=8d libgdal netcdf4 pandas gdal shapely
 COPY ./ app/
 ENV PATH /opt/conda/envs/py35/bin:$PATH
 ENV MPLBACKEND Agg
