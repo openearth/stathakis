@@ -5,3 +5,4 @@ requests==2.9.1
 python-dateutil==2.6.1
 geojson==2.1.0
 simplejson==3.11.1
+Flask-Cors==3.0.3
