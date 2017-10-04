@@ -180,8 +180,8 @@ def get_series(row, start_time, end_time, validated=False):
             "Code": station.code
         },
         "Periode": {
-            "Begindatumtijd": start_time.isoformat(),
-            "Einddatumtijd": end_time.isoformat()
+            "Begindatumtijd": start_time,
+            "Einddatumtijd": end_time
         }
     }
     logger.debug('Getting url with data %s', request)
