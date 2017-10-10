@@ -1,10 +1,12 @@
 import logging
 import pathlib
+import json
 
 import netCDF4
 import numpy as np
 import pandas as pd
 
+from ..utils import CustomEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +111,8 @@ def get_measurements(data_dir, quantity, lat, lon, start_time, end_time):
         }
 
     ]
+    # make sure we serialize to json
+    series = json.loads(json.dumps(series, cls=CustomEncoder))
     response = {
         "series": series
     }

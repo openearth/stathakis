@@ -5,6 +5,10 @@ available_grids = [
     "ncep"
 ]
 
+available_grid_infos = {
+    "ncep": ncep.get_grid_info
+}
+
 available_grid_measurements = {
     "ncep": ncep.get_measurements
 }

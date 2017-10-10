@@ -180,8 +180,8 @@ def get_series(row, start_time, end_time, validated=False):
             "Code": station.code
         },
         "Periode": {
-            "Begindatumtijd": start_time,
-            "Einddatumtijd": end_time
+            "Begindatumtijd": start_time.isoformat(),
+            "Einddatumtijd": end_time.isoformat()
         }
     }
     logger.debug('Getting url with data %s', request)
@@ -270,9 +270,9 @@ def get_station_measurements(station, quantity, start_time=None, end_time=None):
     now = datetime.datetime.now(UTC)
     two_days = datetime.timedelta(days=2)
     if start_time is None:
-        start_time = (now - two_days).isoformat()
+        start_time = (now - two_days)
     if end_time is None:
-        end_time = (now + two_days).isoformat()
+        end_time = (now + two_days)
     data = get_data(station, quantity=quantity, start_time=start_time, end_time=end_time)
     response = json.loads(json.dumps(data, cls=CustomEncoder))
     return response
