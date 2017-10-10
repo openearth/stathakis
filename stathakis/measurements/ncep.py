@@ -55,7 +55,7 @@ def get_measurements(data_dir, quantity, lat, lon, start_time, end_time):
     data_dir = pathlib.Path(data_dir)
     v_urls = list(sorted(data_dir.glob('vwnd.10m.gauss.*.nc')))
     u_urls = list(sorted(data_dir.glob('uwnd.10m.gauss.*.nc')))
-
+    logger.info("reading data in %s, found urls: %s and %s", data_dir, u_urls, v_urls)
     # get all data required to find correct dataset
     data = {}
     with netCDF4.MFDataset(u_urls, aggdim='time') as ds_u:
