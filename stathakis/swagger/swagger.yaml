@@ -36,6 +36,8 @@ paths:
           description: "list of station datasets"
           schema:
             type: "array"
+            items:
+              type: "string"
         400:
           description: "bad input parameter"
       x-tags:
@@ -254,6 +256,8 @@ definitions:
     properties:
       series:
         type: array
+        items:
+          type: "object"
 
   Grid:
     type: "object"
