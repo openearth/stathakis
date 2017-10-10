@@ -35,6 +35,7 @@ def get_grid_info(data_dir):
     data_dir = pathlib.Path(data_dir)
     v_urls = list(sorted(data_dir.glob('vwnd.10m.gauss.*.nc')))
     u_urls = list(sorted(data_dir.glob('uwnd.10m.gauss.*.nc')))
+    info['urls'] = u_urls + v_urls
     with netCDF4.MFDataset(u_urls, aggdim='time') as ds_u:
         attrs = ds_u.ncattrs()
         for attr in attrs:
