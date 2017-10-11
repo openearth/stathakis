@@ -15,6 +15,7 @@ ENV PATH /opt/conda/envs/py35/bin:$PATH
 ENV GDAL_DATA /opt/conda/envs/py35/share/gdal
 RUN find /opt/conda/envs/py35
 RUN cd /app && pip install -r requirements.txt && pip install -e .
+VOLUME /data
 # Create a run directory with
 WORKDIR app
 EXPOSE 8080
