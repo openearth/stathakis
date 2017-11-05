@@ -92,25 +92,11 @@ def get_measurements(data_dir, quantity, lat, lon, start_time, end_time):
         names['v'] = ds_u.variables['uwnd'].long_name
         units['v'] = ds_u.variables['uwnd'].units
 
-    series = [
-        {
-            "data": pd.DataFrame(data=dict(
+    series = pd.DataFrame(data=dict(
                 dateTime=data['t'][t_start_idx:t_end_idx],
-                value=data['u']
-            )),
-            "name": names['u'],
-            "units": units['u']
-        },
-        {
-            "data": pd.DataFrame(data=dict(
-                dateTime=data['t'][t_start_idx:t_end_idx],
-                value=data['v']
-            )),
-            "name": names['v'],
-            "units": units['v']
-        }
-
-    ]
+                u=data['u'],
+                v=data['v']
+    ))
     # make sure we serialize to json
     series = json.loads(json.dumps(series, cls=CustomEncoder))
     response = {
