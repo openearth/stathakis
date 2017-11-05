@@ -12,8 +12,8 @@ def test_grid():
 
 
 def test_get_measurement():
-    start_time = dateutil.parser.parse("2017-3-10T09:00:00.000+01:00")
-    end_time = dateutil.parser.parse("2017-3-14T10:10:00.000+01:00")
+    start_time = dateutil.parser.parse("2010-3-10T09:00:00.000+01:00")
+    end_time = dateutil.parser.parse("2010-3-14T10:10:00.000+01:00")
     lat = 52
     lon = 3
     data_dir = pathlib.Path('data/noaa/ncep')
